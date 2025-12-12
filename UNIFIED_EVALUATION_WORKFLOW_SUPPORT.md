@@ -4,21 +4,30 @@ This document analyzes which strategies from the Unified Evaluation Workflow are
 
 ## Methodology
 
-A strategy is considered "natively supported" only if the harness provides it directly upon installation (via `pip install opencompass` or with optional extras like `[full]`, `[api]`, `[lmdeploy]`, `[vllm]`), without requiring:
-- Additional implementation by users
-- Custom modules beyond the core package
-- Integration with external libraries not included in OpenCompass dependencies
-- Separate packages or frameworks (e.g., agent frameworks that require separate installation)
+A strategy is considered "natively supported" if it's provided with the **full installation** of OpenCompass via `pip install "opencompass[full]"`, which includes:
+- Core runtime dependencies (`requirements/runtime.txt`)
+- Extended dataset support (`requirements/extra.txt`)
+- Additional evaluation capabilities (alpaca-eval, human-eval, faiss, etc.)
+
+A strategy is **NOT** considered natively supported if it requires:
+- Additional implementation by users beyond configuration
+- Custom modules beyond the core package and full extras
+- Separate packages not included in `[full]` (e.g., `requirements/agent.txt`, `requirements/api.txt` as separate installs)
+- Integration with external frameworks requiring manual installation
+
+Note: While `[api]`, `[lmdeploy]`, and `[vllm]` are also available as installation options, we use `[full]` as the baseline since it represents the most comprehensive standard installation for dataset evaluation.
 
 The analysis is based on:
 - Official documentation (README.md, docs/)
 - Source code examination (opencompass/)
 - Setup configuration (setup.py, requirements/)
-- Native capabilities present in the codebase
+- Native capabilities with `pip install "opencompass[full]"`
 
 ## Summary
 
-OpenCompass is a comprehensive evaluation harness for large language models and vision-language models that natively supports a substantial portion of the unified evaluation workflow, with particular strengths in dataset preparation, batch inference, comprehensive scoring methods, pairwise comparison, and leaderboard integration.
+OpenCompass is a comprehensive evaluation harness for large language models and vision-language models. With the **full installation** (`pip install "opencompass[full]"`), it natively supports a substantial portion of the unified evaluation workflow, with particular strengths in dataset preparation, batch inference, comprehensive scoring methods, pairwise comparison, and leaderboard integration.
+
+This analysis is based on the **full installation** which includes extended dataset support and additional evaluation capabilities beyond the basic installation.
 
 ---
 
@@ -29,7 +38,7 @@ OpenCompass is a comprehensive evaluation harness for large language models and 
 #### ✅ Strategy 1: PyPI Packages
 **SUPPORTED** - OpenCompass can be installed via pip:
 - `pip install -U opencompass` (basic installation)
-- `pip install "opencompass[full]"` (full installation with more dataset support)
+- `pip install "opencompass[full]"` **(recommended full installation with extended dataset support)**
 - `pip install "opencompass[api]"` (API evaluation support)
 - `pip install "opencompass[lmdeploy]"` (with LMDeploy backend)
 - `pip install "opencompass[vllm]"` (with vLLM backend)
@@ -395,16 +404,38 @@ OpenCompass excels as a comprehensive **offline batch evaluation framework** for
 
 ## Appendix: Classification Rationale
 
+### Installation Baseline: `pip install "opencompass[full]"`
+
+This analysis uses the **full installation** as the baseline, which includes:
+- Core runtime dependencies (`requirements/runtime.txt`)
+- Extended dataset support (`requirements/extra.txt`):
+  - `alpaca-eval` for AlpacaEval subjective evaluation
+  - `human-eval` for code evaluation (HumanEval, HumanEval+)
+  - `math-verify` for mathematical verification
+  - `faiss_gpu` for in-context learning retrieval
+  - Various dataset-specific libraries (ltp, pypinyin, rdkit, etc.)
+
 ### Why Some Common Features Are Marked "NOT SUPPORTED"
 
-Several features that exist in the OpenCompass ecosystem are marked as "NOT SUPPORTED" because they require additional dependencies beyond the standard installation:
+Features that exist in the OpenCompass ecosystem but require installation beyond `[full]` are marked as "NOT SUPPORTED":
 
-1. **Agent Evaluation (T-Eval, CIBench)**: While OpenCompass can evaluate agent capabilities, it requires separate installation of `lagent` and additional dependencies (`requirements/agent.txt`). These are not included in standard installations and represent integration with external frameworks rather than native support.
+1. **Agent Evaluation (T-Eval, CIBench)**: Requires separate installation of `requirements/agent.txt` which includes:
+   - `lagent-cibench` (agent framework)
+   - `tensorflow`, `jupyter`, `ipython` (agent execution environment)
+   - Not included in `[full]` installation
 
-2. **Performance Metrics**: While some backend implementations (vLLM, LMDeploy) may track performance, OpenCompass itself does not provide native APIs for measuring or reporting latency, throughput, or resource consumption as part of evaluation results.
+2. **API Models**: While OpenCompass supports API models natively, using them requires:
+   - `pip install "opencompass[api]"` (separate from `[full]`)
+   - However, API authentication capability is native and doesn't require this
 
-3. **Interactive Environments**: The harness is designed for batch evaluation of model outputs, not for managing interactive environment stepping or simulation.
+3. **Inference Acceleration**: `[lmdeploy]` and `[vllm]` are separate installation options:
+   - Not included in `[full]` to avoid dependency conflicts
+   - These are optional backends, not core evaluation capabilities
 
-4. **Production Monitoring**: OpenCompass is an offline evaluation tool, not a production monitoring system. It does not provide streaming inference, drift detection, or alerting capabilities.
+4. **Performance Metrics**: While some backend implementations (vLLM, LMDeploy) may track performance, OpenCompass itself does not provide native APIs for measuring or reporting latency, throughput, or resource consumption as part of evaluation results.
 
-This classification ensures we distinguish between what OpenCompass provides natively versus what requires additional integration work, external tools, or custom implementation.
+5. **Interactive Environments**: The harness is designed for batch evaluation of model outputs, not for managing interactive environment stepping or simulation.
+
+6. **Production Monitoring**: OpenCompass is an offline evaluation tool, not a production monitoring system. It does not provide streaming inference, drift detection, or alerting capabilities.
+
+This classification ensures we distinguish between what `pip install "opencompass[full]"` provides natively versus what requires additional installation steps, external tools, or custom implementation.
