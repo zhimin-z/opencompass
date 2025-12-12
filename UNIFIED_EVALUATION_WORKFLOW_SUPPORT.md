@@ -184,8 +184,18 @@ pip install -e .
 #### ❌ Strategy 2: Interactive Loop
 **NOT SUPPORTED** - OpenCompass does not natively provide interactive environment stepping, tool-based reasoning loops, or physics simulation interfaces. While it has some agent evaluation features, they are not core native capabilities.
 
-#### ❌ Strategy 3: Arena Battle
-**NOT SUPPORTED** - While OpenCompass mentions "CompassArena" and has some Bradley-Terry model comparison code (opencompass/summarizers/subjective/compass_arena_bradley_terry.py), native pairwise arena battle execution is not a core native feature.
+#### ✅ Strategy 3: Arena Battle
+**SUPPORTED** - OpenCompass provides pairwise model comparison:
+- Compass Arena Bradley-Terry for pairwise comparisons
+- ArenaHard for arena-style evaluations
+- Comparison mode for subjective evaluation
+- Win rate calculation and Elo rating computation
+
+**Evidence**:
+- opencompass/summarizers/subjective/compass_arena_bradley_terry.py implements pairwise matchups
+- opencompass/summarizers/subjective/arenahard.py computes MLE Elo ratings
+- docs/en/advanced_guides/subjective_evaluation.md line 11 mentions "Compare Mode: comparing model responses pairwise to calculate their win rate"
+- README.md line 273 mentions "CompassArena"
 
 #### ❌ Strategy 4: Production Streaming
 **NOT SUPPORTED** - OpenCompass does not provide production traffic streaming, real-time metric collection, or drift monitoring capabilities.
@@ -246,8 +256,13 @@ pip install -e .
 - docs/en/user_guides/experimentation.md line 125 mentions "Introduction of Summarizer"
 - docs/en/get_started/quick_start.md lines 287-289 describe summarization with averaged scores
 
-#### ❌ Strategy 2: Uncertainty Quantification
-**NOT SUPPORTED** - OpenCompass does not natively provide bootstrap resampling, confidence intervals, or Prediction-Powered Inference (PPI).
+#### ⚠️ Strategy 2: Uncertainty Quantification
+**PARTIALLY SUPPORTED** - OpenCompass provides bootstrap resampling for specific subjective evaluation methods (ArenaHard, Compass Arena Bradley-Terry), but does not provide general uncertainty quantification or Prediction-Powered Inference (PPI) across all evaluation types.
+
+**Evidence**:
+- opencompass/summarizers/subjective/arenahard.py implements `get_bootstrap_result()` with 100 bootstrap rounds
+- opencompass/summarizers/subjective/compass_arena_bradley_terry.py uses bootstrap for confidence estimation
+- Limited to subjective evaluation scenarios, not available for general objective metrics
 
 ---
 
@@ -310,9 +325,9 @@ pip install -e .
 
 ## Conclusion
 
-### Natively Supported Strategies: 21 out of 40
+### Natively Supported Strategies: 22.5 out of 40
 
-OpenCompass natively supports **21 strategies** across the unified evaluation workflow:
+OpenCompass natively supports **22.5 strategies** across the unified evaluation workflow (with 0.5 for partial support of uncertainty quantification):
 
 **Phase 0: Provisioning (5/8)**
 - ✅ PyPI installation
@@ -328,14 +343,16 @@ OpenCompass natively supports **21 strategies** across the unified evaluation wo
 - ✅ Judge preparation (LLM-as-judge)
 - ✅ Ground truth preparation
 
-**Phase II: Execution (1/4)**
+**Phase II: Execution (2/4)**
 - ✅ Batch inference
+- ✅ Arena battle (pairwise comparison)
 
-**Phase III: Assessment (4/6)**
+**Phase III: Assessment (4.5/6)**
 - ✅ Deterministic measurement
 - ✅ Embedding measurement
 - ✅ Subjective measurement (LLM-as-judge)
 - ✅ Score aggregation
+- ⚠️ Uncertainty quantification (partial - bootstrap for subjective evaluation only)
 
 **Phase IV: Reporting (5/6)**
 - ✅ Subgroup analysis
