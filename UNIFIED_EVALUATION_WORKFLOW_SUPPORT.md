@@ -62,7 +62,7 @@ pip install -e .
 - Integration with OpenCompass Leaderboard (CompassRank)
 - Submission to public leaderboards for model comparison
 
-**Evidence**: README.md mentions "CompassRank" leaderboard at rank.opencompass.org.cn, lines 86-88 state "If you would like to join the evaluation, please provide the model repository URL or a standard API interface to the email address"
+**Evidence**: README.md mentions "CompassRank" leaderboard at rank.opencompass.org.cn. Lines 86-88 state "If you would like to join the evaluation, please provide the model repository URL or a standard API interface to the email address opencompass@pjlab.org.cn"
 
 #### ✅ Strategy 2: API Provider Authentication
 **SUPPORTED** - OpenCompass supports API authentication through environment variables and configuration:
@@ -137,7 +137,7 @@ pip install -e .
 **Evidence**:
 - docs/en/get_started/installation.md lines 103-141 describe dataset preparation
 - README.md lines 137-171 describe multiple dataset preparation methods
-- 1816 dataset implementation files in opencompass/datasets/
+- Extensive dataset implementations in opencompass/datasets/ directory (hundreds of files)
 - Supports MMLU, GSM8K, HumanEval, CEVAL, GAOKAO, and many others
 
 #### ❌ Strategy 2: Synthetic Data Generation (Generative)
