@@ -1,10 +1,24 @@
 # OpenCompass: Unified Evaluation Workflow Support Analysis
 
-This document analyzes which strategies from the Unified Evaluation Workflow are **natively supported** by OpenCompass. A strategy is considered "natively supported" only if the harness provides it directly upon installation, without requiring additional implementation, custom modules, or integration with external libraries.
+This document analyzes which strategies from the Unified Evaluation Workflow are **natively supported** by OpenCompass. 
+
+## Methodology
+
+A strategy is considered "natively supported" only if the harness provides it directly upon installation (via `pip install opencompass` or with optional extras like `[full]`, `[api]`, `[lmdeploy]`, `[vllm]`), without requiring:
+- Additional implementation by users
+- Custom modules beyond the core package
+- Integration with external libraries not included in OpenCompass dependencies
+- Separate packages or frameworks (e.g., agent frameworks that require separate installation)
+
+The analysis is based on:
+- Official documentation (README.md, docs/)
+- Source code examination (opencompass/)
+- Setup configuration (setup.py, requirements/)
+- Native capabilities present in the codebase
 
 ## Summary
 
-OpenCompass is a comprehensive evaluation harness for large language models and vision-language models that natively supports a substantial portion of the unified evaluation workflow, with particular strengths in dataset preparation, batch inference, comprehensive scoring methods, and leaderboard integration.
+OpenCompass is a comprehensive evaluation harness for large language models and vision-language models that natively supports a substantial portion of the unified evaluation workflow, with particular strengths in dataset preparation, batch inference, comprehensive scoring methods, pairwise comparison, and leaderboard integration.
 
 ---
 
@@ -375,4 +389,22 @@ OpenCompass natively supports **22.5 strategies** across the unified evaluation 
 5. **No Performance Metrics**: Cannot measure latency, throughput, or resource consumption
 6. **No Production Monitoring**: Missing streaming, drift detection, and regression alerting
 
-OpenCompass excels as a comprehensive **offline batch evaluation framework** for language and vision-language models, with particular strengths in dataset diversity, LLM-as-judge evaluation, and leaderboard integration. However, it is not designed for real-time production monitoring, performance benchmarking, interactive agent evaluation, or non-neural algorithm assessment.
+OpenCompass excels as a comprehensive **offline batch evaluation framework** for language and vision-language models, with particular strengths in dataset diversity, LLM-as-judge evaluation, pairwise model comparison, and leaderboard integration. However, it is not designed for real-time production monitoring, performance benchmarking, interactive agent evaluation, or non-neural algorithm assessment.
+
+---
+
+## Appendix: Classification Rationale
+
+### Why Some Common Features Are Marked "NOT SUPPORTED"
+
+Several features that exist in the OpenCompass ecosystem are marked as "NOT SUPPORTED" because they require additional dependencies beyond the standard installation:
+
+1. **Agent Evaluation (T-Eval, CIBench)**: While OpenCompass can evaluate agent capabilities, it requires separate installation of `lagent` and additional dependencies (`requirements/agent.txt`). These are not included in standard installations and represent integration with external frameworks rather than native support.
+
+2. **Performance Metrics**: While some backend implementations (vLLM, LMDeploy) may track performance, OpenCompass itself does not provide native APIs for measuring or reporting latency, throughput, or resource consumption as part of evaluation results.
+
+3. **Interactive Environments**: The harness is designed for batch evaluation of model outputs, not for managing interactive environment stepping or simulation.
+
+4. **Production Monitoring**: OpenCompass is an offline evaluation tool, not a production monitoring system. It does not provide streaming inference, drift detection, or alerting capabilities.
+
+This classification ensures we distinguish between what OpenCompass provides natively versus what requires additional integration work, external tools, or custom implementation.
