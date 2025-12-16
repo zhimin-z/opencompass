@@ -4,30 +4,68 @@ This document analyzes which strategies from the Unified Evaluation Workflow are
 
 ## Methodology
 
-A strategy is considered "natively supported" if it's provided with the **full installation** of OpenCompass via `pip install "opencompass[full]"`, which includes:
+This analysis uses a three-tier classification system to distinguish between different levels of support:
+
+### Classification Criteria
+
+#### **Native Support (Natively Supported)**
+Strategies that meet ALL of the following requirements:
+- Available immediately after `pip install "opencompass[full]"`
+- Requires only import statements and minimal configuration (≤2 lines)
+- No external dependencies beyond the `[full]` installation
+- No custom implementation or glue code required
+
+**Example:**
+```python
+from opencompass.models import HuggingFaceCausalLM
+# model config ready to use
+```
+
+#### **Integrated Support (Supported via Third-Party Integration)**
+Strategies that meet ALL of the following requirements:
+- Requires installing ≥1 external package(s) beyond `[full]` (e.g., `[api]`, `[lmdeploy]`, `[vllm]`)
+- Requires glue code or additional configuration (typically ≤10 lines)
+- Has documented integration pattern or official example in OpenCompass
+- Functionality enabled through third-party tools rather than the harness alone
+
+**Example:**
+```python
+# Requires: pip install "opencompass[api]"
+from opencompass.models import OpenAI
+# + API key configuration
+```
+
+#### **Not Supported**
+Strategies that:
+- Are not available even with third-party integration
+- Require significant custom implementation (>10 lines of glue code)
+- Have no documented integration pattern
+- Are fundamentally incompatible with the harness design
+
+### Installation Baseline
+
+The analysis uses `pip install "opencompass[full]"` as the baseline for native support, which includes:
 - Core runtime dependencies (`requirements/runtime.txt`)
 - Extended dataset support (`requirements/extra.txt`)
 - Additional evaluation capabilities (alpaca-eval, human-eval, faiss, etc.)
 
-A strategy is **NOT** considered natively supported if it requires:
-- Additional implementation by users beyond configuration
-- Custom modules beyond the core package and full extras
-- Separate packages not included in `[full]` (e.g., `requirements/agent.txt`, `requirements/api.txt` as separate installs)
-- Integration with external frameworks requiring manual installation
-
-Note: While `[api]`, `[lmdeploy]`, and `[vllm]` are also available as installation options, we use `[full]` as the baseline since it represents the most comprehensive standard installation for dataset evaluation.
+Additional installation options (`[api]`, `[lmdeploy]`, `[vllm]`) are considered third-party integrations.
 
 The analysis is based on:
 - Official documentation (README.md, docs/)
 - Source code examination (opencompass/)
 - Setup configuration (setup.py, requirements/)
-- Native capabilities with `pip install "opencompass[full]"`
+- Integration examples and patterns
 
 ## Summary
 
-OpenCompass is a comprehensive evaluation harness for large language models and vision-language models. With the **full installation** (`pip install "opencompass[full]"`), it natively supports a substantial portion of the unified evaluation workflow, with particular strengths in dataset preparation, batch inference, comprehensive scoring methods, pairwise comparison, and leaderboard integration.
+OpenCompass is a comprehensive evaluation harness for large language models and vision-language models. This analysis classifies support into three tiers:
 
-This analysis is based on the **full installation** which includes extended dataset support and additional evaluation capabilities beyond the basic installation.
+- **Natively Supported**: Available with `pip install "opencompass[full]"` with minimal configuration
+- **Supported via Third-Party Integration**: Requires additional packages (e.g., `[api]`, `[lmdeploy]`) or external tools, but documented
+- **Not Supported**: Not available even with integrations
+
+OpenCompass provides strong native support for dataset preparation, batch inference, scoring methods, and leaderboard integration. Additional capabilities like API models and accelerated inference are available through well-documented third-party integrations.
 
 ---
 
@@ -36,7 +74,7 @@ This analysis is based on the **full installation** which includes extended data
 ### Step A: Harness Installation
 
 #### ✅ Strategy 1: PyPI Packages
-**SUPPORTED** - OpenCompass can be installed via pip:
+**NATIVELY SUPPORTED** - OpenCompass can be installed via pip:
 - `pip install -U opencompass` (basic installation)
 - `pip install "opencompass[full]"` **(recommended full installation with extended dataset support)**
 - `pip install "opencompass[api]"` (API evaluation support)
@@ -46,7 +84,7 @@ This analysis is based on the **full installation** which includes extended data
 **Evidence**: README.md, docs/en/get_started/installation.md, setup.py
 
 #### ✅ Strategy 2: Git Clone
-**SUPPORTED** - OpenCompass can be installed from source:
+**NATIVELY SUPPORTED** - OpenCompass can be installed from source:
 ```bash
 git clone https://github.com/open-compass/opencompass opencompass
 cd opencompass
@@ -67,27 +105,27 @@ pip install -e .
 ### Step B: Service Authentication
 
 #### ✅ Strategy 1: Evaluation Platform Authentication
-**SUPPORTED** - OpenCompass supports authentication with evaluation platforms and leaderboard submission:
+**NATIVELY SUPPORTED** - OpenCompass supports authentication with evaluation platforms and leaderboard submission:
 - Integration with OpenCompass Leaderboard (CompassRank)
 - Submission to public leaderboards for model comparison
 
 **Evidence**: README.md mentions "CompassRank" leaderboard at rank.opencompass.org.cn. Lines 86-88 state "If you would like to join the evaluation, please provide the model repository URL or a standard API interface to the email address opencompass@pjlab.org.cn"
 
-#### ✅ Strategy 2: API Provider Authentication
-**SUPPORTED** - OpenCompass supports API authentication through environment variables and configuration:
-- OpenAI API (`OPENAI_API_KEY`)
-- Gemini API (`GEMINI_API_KEY`)
-- Multiple commercial model providers (Baidu, Qwen, ZhipuAI, ByteDance, Huawei, etc.)
+#### 🔌 Strategy 2: API Provider Authentication
+**SUPPORTED VIA THIRD-PARTY INTEGRATION** - OpenCompass supports API authentication through the `[api]` installation extra:
+- Requires: `pip install "opencompass[api]"`
+- OpenAI API (`OPENAI_API_KEY`) - also available in base installation
+- Commercial providers (Claude/Anthropic, Gemini, Qwen/Dashscope, ZhipuAI, Baichuan, ByteDance, Huawei, Baidu, MiniMax, SenseTime, Xunfei, etc.)
 - Configuration via environment variables or credential files
 
 **Evidence**: 
-- opencompass/models/openai_api.py uses `OPENAI_API_KEY`
-- opencompass/models/gemini_api.py uses `GEMINI_API_KEY`
+- requirements/api.txt includes: anthropic, dashscope, zhipuai, volcengine, etc.
+- opencompass/models/ contains API model implementations requiring these dependencies
 - README.md line 201: "export OPENAI_API_KEY="YOUR_OPEN_API_KEY""
-- Multiple API model implementations in opencompass/models/
+- docs/en/get_started/installation.md describes API installation: `pip install "opencompass[api]"`
 
 #### ✅ Strategy 3: Repository Authentication
-**SUPPORTED** - OpenCompass supports authentication with model and dataset repositories:
+**NATIVELY SUPPORTED** - OpenCompass supports authentication with model and dataset repositories:
 - HuggingFace Hub integration (uses `huggingface_hub` library for dataset downloads)
 - ModelScope integration (via `DATASET_SOURCE=ModelScope` environment variable)
 - Automatic download of datasets from HuggingFace
@@ -104,19 +142,21 @@ pip install -e .
 
 ### Step A: SUT Preparation
 
-#### ✅ Strategy 1: Model-as-a-Service (Remote Inference)
-**SUPPORTED** - OpenCompass supports remote inference through:
-- OpenAI API models (GPT-3.5, GPT-4, GPT-4o, o1)
+#### 🔌 Strategy 1: Model-as-a-Service (Remote Inference)
+**SUPPORTED VIA THIRD-PARTY INTEGRATION** - OpenCompass supports remote inference through the `[api]` installation extra:
+- Requires: `pip install "opencompass[api]"`
+- OpenAI API models (GPT-3.5, GPT-4, GPT-4o, o1) - also available in base installation
 - Commercial API providers (Claude, Gemini, ZhipuAI, Baichuan, ByteDance, Huawei, Baidu, MiniMax, SenseTime, Xunfei, etc.)
 - Custom API endpoints
 
 **Evidence**:
+- requirements/api.txt lists required packages (anthropic, dashscope, zhipuai, etc.)
 - README.md lines 346-361 list supported API models
-- opencompass/models/ contains multiple API model implementations (openai_api.py, gemini_api.py, claude_sdk_api.py, etc.)
+- opencompass/models/ contains multiple API model implementations
 - docs/en/user_guides/models.md lines 68-106 describe API-based models
 
 #### ✅ Strategy 2: Model-in-Process (Local Inference)
-**SUPPORTED** - OpenCompass supports local model inference:
+**NATIVELY SUPPORTED** - OpenCompass supports local model inference:
 - HuggingFace models via `HuggingFaceBaseModel` and `HuggingFaceCausalLM`
 - Direct loading of model weights and checkpoints
 - Access to logits and probabilities for perplexity-based evaluation
@@ -136,7 +176,7 @@ pip install -e .
 ### Step B: Benchmark Preparation (Inputs)
 
 #### ✅ Strategy 1: Benchmark Dataset Preparation (Offline)
-**SUPPORTED** - OpenCompass provides comprehensive dataset preparation:
+**NATIVELY SUPPORTED** - OpenCompass provides comprehensive dataset preparation:
 - Automatic download from HuggingFace Datasets
 - Automatic download from ModelScope datasets
 - Manual download of OpenCompass custom datasets
@@ -161,7 +201,7 @@ pip install -e .
 ### Step C: Benchmark Preparation (References)
 
 #### ✅ Strategy 1: Judge Preparation
-**SUPPORTED** - OpenCompass provides comprehensive LLM-as-judge capabilities:
+**NATIVELY SUPPORTED** - OpenCompass provides comprehensive LLM-as-judge capabilities:
 - `GenericLLMEvaluator` for LLM-based evaluation
 - `CascadeEvaluator` for sequential evaluator chains
 - `MATHVerifyEvaluator` for mathematical reasoning
@@ -176,7 +216,7 @@ pip install -e .
 - docs/en/advanced_guides/subjective_evaluation.md describes subjective evaluation with JudgeLLM
 
 #### ✅ Strategy 2: Ground Truth Preparation
-**SUPPORTED** - OpenCompass loads and pre-processes ground truth references:
+**NATIVELY SUPPORTED** - OpenCompass loads and pre-processes ground truth references:
 - Human annotations from datasets
 - Reference answers for evaluation
 - Ground truth labels for comparison
@@ -192,23 +232,28 @@ pip install -e .
 ### Step A: SUT Invocation
 
 #### ✅ Strategy 1: Batch Inference
-**SUPPORTED** - OpenCompass provides comprehensive batch inference:
-- Parallel inference across multiple samples
+**NATIVELY SUPPORTED** - OpenCompass provides comprehensive batch inference with `[full]` installation:
+- Parallel inference across multiple samples with HuggingFace models
 - Configurable batch sizes
 - Support for single model evaluation across multiple datasets
 - Efficient distributed evaluation with task partitioning
+
+**Additional Integration**: Accelerated inference backends available via separate installation:
+- vLLM: `pip install "opencompass[vllm]"`
+- LMDeploy: `pip install "opencompass[lmdeploy]"`
 
 **Evidence**:
 - docs/en/get_started/quick_start.md line 11 describes "parallel inference and evaluation"
 - Model configurations include `batch_size` parameter (docs/en/user_guides/models.md)
 - README.md line 292 mentions "Efficient distributed evaluation"
 - docs/en/user_guides/experimentation.md describes parallel task execution
+- README.md line 212 shows accelerated evaluation with LMDeploy/vLLM
 
 #### ❌ Strategy 2: Interactive Loop
 **NOT SUPPORTED** - OpenCompass does not natively provide interactive environment stepping, tool-based reasoning loops, or physics simulation interfaces. While it has some agent evaluation features, they are not core native capabilities.
 
 #### ✅ Strategy 3: Arena Battle
-**SUPPORTED** - OpenCompass provides pairwise model comparison:
+**NATIVELY SUPPORTED** - OpenCompass provides pairwise model comparison:
 - Compass Arena Bradley-Terry for pairwise comparisons
 - ArenaHard for arena-style evaluations
 - Comparison mode for subjective evaluation
@@ -230,7 +275,7 @@ pip install -e .
 ### Step A: Individual Scoring
 
 #### ✅ Strategy 1: Deterministic Measurement
-**SUPPORTED** - OpenCompass provides extensive deterministic metrics:
+**NATIVELY SUPPORTED** - OpenCompass provides extensive deterministic metrics:
 - Accuracy, exact match, F1 score
 - BLEU, ROUGE, METEOR (for text generation)
 - Pass@k for code evaluation (HumanEval)
@@ -243,7 +288,7 @@ pip install -e .
 - README.md mentions evaluation of code generation (HumanEval)
 
 #### ✅ Strategy 2: Embedding Measurement
-**SUPPORTED** - OpenCompass supports embedding-based evaluation:
+**NATIVELY SUPPORTED** - OpenCompass supports embedding-based evaluation:
 - BERTScore for semantic similarity
 - Sentence embeddings for comparison
 - Neural similarity models
@@ -251,7 +296,7 @@ pip install -e .
 **Evidence**: README.md line 73 mentions XFinder for answer extraction, which uses embedding-based techniques. Various datasets support embedding-based metrics.
 
 #### ✅ Strategy 3: Subjective Measurement
-**SUPPORTED** - OpenCompass provides comprehensive subjective evaluation:
+**NATIVELY SUPPORTED** - OpenCompass provides comprehensive subjective evaluation:
 - LLM-as-judge evaluations with GenericLLMEvaluator
 - GPT-4 and other LLMs as evaluators
 - Model-based judgments for quality assessment
@@ -268,7 +313,7 @@ pip install -e .
 ### Step B: Collective Aggregation
 
 #### ✅ Strategy 1: Score Aggregation
-**SUPPORTED** - OpenCompass provides comprehensive aggregation:
+**NATIVELY SUPPORTED** - OpenCompass provides comprehensive aggregation:
 - Benchmark-level metric computation
 - Averaging across datasets
 - Weighted aggregation for dataset groups (via `summary_groups` in summarizer)
@@ -280,7 +325,7 @@ pip install -e .
 - docs/en/get_started/quick_start.md lines 287-289 describe summarization with averaged scores
 
 #### ⚠️ Strategy 2: Uncertainty Quantification
-**PARTIALLY SUPPORTED** - OpenCompass provides bootstrap resampling for specific subjective evaluation methods (ArenaHard, Compass Arena Bradley-Terry), but does not provide general uncertainty quantification or Prediction-Powered Inference (PPI) across all evaluation types.
+**PARTIALLY NATIVELY SUPPORTED** - OpenCompass provides bootstrap resampling for specific subjective evaluation methods (ArenaHard, Compass Arena Bradley-Terry), but does not provide general uncertainty quantification or Prediction-Powered Inference (PPI) across all evaluation types.
 
 **Evidence**:
 - opencompass/summarizers/subjective/arenahard.py implements `get_bootstrap_result()` with 100 bootstrap rounds
@@ -297,7 +342,7 @@ pip install -e .
 **NOT SUPPORTED** - While OpenCompass logs evaluation tasks, it does not provide detailed step-by-step execution traces showing intermediate reasoning states or tool calls in the way specialized tracing tools do.
 
 #### ✅ Strategy 2: Subgroup Analysis
-**SUPPORTED** - OpenCompass supports breaking down results by categories:
+**NATIVELY SUPPORTED** - OpenCompass supports breaking down results by categories:
 - Dataset-level metric breakdown
 - Support for summary groups that can stratify results
 - Performance analysis across different task types
@@ -308,7 +353,7 @@ pip install -e .
 - README.md line 288 mentions "comprehensive evaluation in five dimensions"
 
 #### ✅ Strategy 3: Chart Generation
-**SUPPORTED** - OpenCompass provides visualization capabilities:
+**NATIVELY SUPPORTED** - OpenCompass provides visualization capabilities:
 - Heatmap visualizations for NeedleBench (showing performance across context lengths)
 - Matplotlib-based plotting for long-context evaluation
 - Radar charts and performance plots
@@ -319,7 +364,7 @@ pip install -e .
 - opencompass/summarizers/needlebench.py line 191 has `visualize()` function
 
 #### ✅ Strategy 4: Dashboard Creation
-**SUPPORTED** - OpenCompass provides dashboard and result display:
+**NATIVELY SUPPORTED** - OpenCompass provides dashboard and result display:
 - CompassHub (hub.opencompass.org.cn) - benchmark browser interface
 - CompassRank (rank.opencompass.org.cn) - leaderboard interface
 - Result tables in CSV and TXT formats
@@ -331,7 +376,7 @@ pip install -e .
 - docs/en/get_started/quick_start.md line 13 mentions "easy-to-read table" and CSV/TXT output
 
 #### ✅ Strategy 5: Leaderboard Publication
-**SUPPORTED** - OpenCompass provides leaderboard submission:
+**NATIVELY SUPPORTED** - OpenCompass provides leaderboard submission:
 - OpenCompass Leaderboard for public model comparison
 - CompassRank for ranking models
 - Submission via email to opencompass@pjlab.org.cn
@@ -348,26 +393,27 @@ pip install -e .
 
 ## Conclusion
 
-### Natively Supported Strategies: 22.5 out of 40
+### Support Summary
 
-OpenCompass natively supports **22.5 strategies** across the unified evaluation workflow (with 0.5 for partial support of uncertainty quantification):
+OpenCompass provides support across the unified evaluation workflow through three tiers:
 
-**Phase 0: Provisioning (5/8)**
+#### **Natively Supported: 20.5 out of 40 strategies**
+
+Strategies available immediately with `pip install "opencompass[full]"`:
+
+**Phase 0: Provisioning (3/8)**
 - ✅ PyPI installation
 - ✅ Git clone installation
-- ✅ Evaluation platform authentication
-- ✅ API provider authentication
 - ✅ Repository authentication
 
-**Phase I: Specification (4/9)**
-- ✅ Model-as-a-Service (API models)
-- ✅ Model-in-Process (local models)
-- ✅ Benchmark dataset preparation
+**Phase I: Specification (3/9)**
+- ✅ Model-in-Process (local models via HuggingFace)
+- ✅ Benchmark dataset preparation (70+ datasets)
 - ✅ Judge preparation (LLM-as-judge)
 - ✅ Ground truth preparation
 
 **Phase II: Execution (2/4)**
-- ✅ Batch inference
+- ✅ Batch inference (HuggingFace models)
 - ✅ Arena battle (pairwise comparison)
 
 **Phase III: Assessment (4.5/6)**
@@ -383,12 +429,50 @@ OpenCompass natively supports **22.5 strategies** across the unified evaluation 
 - ✅ Dashboard creation
 - ✅ Leaderboard publication
 
+#### **Supported via Third-Party Integration: 2 out of 40 strategies**
+
+Strategies requiring additional installation (`[api]`, `[lmdeploy]`, `[vllm]`):
+
+**Phase 0: Provisioning (2/8)**
+- 🔌 API provider authentication (requires `[api]`)
+- 🔌 Evaluation platform authentication (for some platforms)
+
+**Phase I: Specification (1/9)**
+- 🔌 Model-as-a-Service (requires `[api]` for most providers)
+
+**Note**: Batch inference with accelerated backends (vLLM, LMDeploy) is also available as an integration but is counted under native batch inference support.
+
+#### **Not Supported: 17.5 out of 40 strategies**
+
+**Phase 0: Provisioning (3/8)**
+- ❌ Container images
+- ❌ Binary packages
+- ❌ Node package
+
+**Phase I: Specification (5/9)**
+- ❌ Algorithm implementation (ANN, knowledge graphs)
+- ❌ Policy/Agent instantiation (RL agents)
+- ❌ Synthetic data generation
+- ❌ Simulation environment setup
+- ❌ Production traffic sampling
+
+**Phase II: Execution (2/4)**
+- ❌ Interactive loop
+- ❌ Production streaming
+
+**Phase III: Assessment (1/6)**
+- ❌ Performance measurement (latency, throughput)
+
+**Phase IV: Reporting (1/6)**
+- ❌ Regression alerting
+
 ### Key Strengths
-1. **Comprehensive Installation & Authentication**: Multiple installation methods and extensive API/repository authentication
-2. **Diverse Model Support**: Both local (HuggingFace) and remote (API) model evaluation
-3. **Rich Dataset Ecosystem**: 70+ datasets with automatic download and preparation
-4. **Advanced Judging**: Strong LLM-as-judge capabilities with multiple evaluators
+1. **Comprehensive Dataset Support**: 70+ datasets with automatic download and preparation
+2. **Flexible Model Evaluation**: Both local (HuggingFace) and API models supported
+3. **Advanced Judging**: Strong LLM-as-judge capabilities with multiple evaluators
+4. **Rich Scoring Methods**: Deterministic, embedding-based, and subjective measurement
 5. **Effective Reporting**: Integrated dashboards, leaderboards, and visualization
+6. **Well-Documented Integrations**: Clear patterns for API models and accelerated inference
 
 ### Key Limitations
 1. **No Container/Binary Distribution**: Missing containerized and binary installation options
@@ -398,15 +482,32 @@ OpenCompass natively supports **22.5 strategies** across the unified evaluation 
 5. **No Performance Metrics**: Cannot measure latency, throughput, or resource consumption
 6. **No Production Monitoring**: Missing streaming, drift detection, and regression alerting
 
-OpenCompass excels as a comprehensive **offline batch evaluation framework** for language and vision-language models, with particular strengths in dataset diversity, LLM-as-judge evaluation, pairwise model comparison, and leaderboard integration. However, it is not designed for real-time production monitoring, performance benchmarking, interactive agent evaluation, or non-neural algorithm assessment.
+### Use Case Fit
+
+**Excellent for:**
+- Offline batch evaluation of LLMs and VLMs
+- Benchmark-based model comparison
+- Subjective evaluation with LLM judges
+- Academic research and model development
+
+**Not suitable for:**
+- Real-time production monitoring
+- Performance/latency benchmarking
+- Interactive agent evaluation
+- Non-neural algorithm assessment (ANN, knowledge graphs, etc.)
+
+OpenCompass excels as a comprehensive **offline batch evaluation framework** for language and vision-language models, with particular strengths in dataset diversity, LLM-as-judge evaluation, pairwise model comparison, and leaderboard integration.
 
 ---
 
-## Appendix: Classification Rationale
+## Appendix: Classification Details
 
-### Installation Baseline: `pip install "opencompass[full]"`
+### Three-Tier Classification System
 
-This analysis uses the **full installation** as the baseline, which includes:
+This analysis distinguishes between native support, third-party integration, and unsupported features:
+
+#### **Tier 1: Native Support**
+Features included with `pip install "opencompass[full]"`:
 - Core runtime dependencies (`requirements/runtime.txt`)
 - Extended dataset support (`requirements/extra.txt`):
   - `alpaca-eval` for AlpacaEval subjective evaluation
@@ -415,27 +516,49 @@ This analysis uses the **full installation** as the baseline, which includes:
   - `faiss_gpu` for in-context learning retrieval
   - Various dataset-specific libraries (ltp, pypinyin, rdkit, etc.)
 
-### Why Some Common Features Are Marked "NOT SUPPORTED"
+#### **Tier 2: Third-Party Integration**
+Features requiring additional installation beyond `[full]`:
 
-Features that exist in the OpenCompass ecosystem but require installation beyond `[full]` are marked as "NOT SUPPORTED":
+1. **API Models** (`pip install "opencompass[api]"`):
+   - Includes: anthropic, dashscope, zhipuai, volcengine, etc.
+   - Use case: Evaluating commercial API models (Claude, Gemini, Qwen, etc.)
+   - Integration: Simple configuration (API keys + model config)
 
-1. **Agent Evaluation (T-Eval, CIBench)**: Requires separate installation of `requirements/agent.txt` which includes:
-   - `lagent-cibench` (agent framework)
-   - `tensorflow`, `jupyter`, `ipython` (agent execution environment)
-   - Not included in `[full]` installation
+2. **Accelerated Inference** (`pip install "opencompass[lmdeploy]"` or `"opencompass[vllm]"`):
+   - Includes: lmdeploy or vllm packages
+   - Use case: Faster inference for large models
+   - Integration: Backend specification in model config
 
-2. **API Models**: While OpenCompass supports API models natively, using them requires:
-   - `pip install "opencompass[api]"` (separate from `[full]`)
-   - However, API authentication capability is native and doesn't require this
+3. **Agent Evaluation** (requires `requirements/agent.txt`):
+   - Includes: lagent-cibench, tensorflow, jupyter
+   - Use case: T-Eval, CIBench agent benchmarks
+   - **Status**: Listed as example but not counted as supported integration due to complexity
 
-3. **Inference Acceleration**: `[lmdeploy]` and `[vllm]` are separate installation options:
-   - Not included in `[full]` to avoid dependency conflicts
-   - These are optional backends, not core evaluation capabilities
+#### **Tier 3: Not Supported**
+Features that are either:
+- Not available even with third-party packages
+- Require significant custom implementation (>10 lines)
+- Have no documented integration pattern
+- Are fundamentally incompatible with harness design
 
-4. **Performance Metrics**: While some backend implementations (vLLM, LMDeploy) may track performance, OpenCompass itself does not provide native APIs for measuring or reporting latency, throughput, or resource consumption as part of evaluation results.
+### Why Some Features Are Not Counted as Integrated Support
 
-5. **Interactive Environments**: The harness is designed for batch evaluation of model outputs, not for managing interactive environment stepping or simulation.
+1. **Agent Evaluation (T-Eval, CIBench)**: While packages exist in `requirements/agent.txt`, the integration requires:
+   - Separate environment setup (conflicts with main dependencies)
+   - Complex agent framework integration (lagent-cibench)
+   - No simple documented pattern in main docs
+   - Typically >10 lines of glue code
 
-6. **Production Monitoring**: OpenCompass is an offline evaluation tool, not a production monitoring system. It does not provide streaming inference, drift detection, or alerting capabilities.
+2. **Performance Metrics**: While backends like vLLM may track performance internally, OpenCompass does not expose APIs for measuring or reporting latency, throughput, or resource consumption as part of evaluation results.
 
-This classification ensures we distinguish between what `pip install "opencompass[full]"` provides natively versus what requires additional installation steps, external tools, or custom implementation.
+3. **Interactive Environments & Simulation**: These require external simulation frameworks (e.g., robot simulators, game engines) that are beyond the scope of evaluation harness integration.
+
+4. **Production Monitoring**: OpenCompass is designed as an offline evaluation tool, not a production monitoring system. Real-time streaming, drift detection, and alerting require fundamentally different architectures.
+
+### Counting Methodology
+
+- **Native**: Counted if available with `[full]` installation
+- **Integrated**: Counted if requires `[api]`, `[lmdeploy]`, or `[vllm]` extras AND has documented integration pattern
+- **Not Supported**: All other cases
+
+This ensures clear distinction between out-of-the-box functionality (native), well-documented extensions (integrated), and unavailable features (not supported).
